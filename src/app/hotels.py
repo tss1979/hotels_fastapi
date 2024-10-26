@@ -1,4 +1,5 @@
-from schemas.hotels import Hotel, HotelPATCH
+from src.app.dependencies import PaginationDep
+from src.schemas.hotels import Hotel, HotelPATCH
 from fastapi import APIRouter
 
 hotels = [
@@ -14,9 +15,9 @@ hotels = [
 router_hotels = APIRouter(prefix="/hotels", tags=["Отели"])
 
 @router_hotels.get("/", summary="Получение полного списка отелей")
-def get_hotels(page: int, per_page: int):
-    start = (page - 1) * per_page
-    finish = start + per_page
+def get_hotels(pagination: PaginationDep):
+    start = (pagination.page - 1) * pagination.per_page
+    finish = start + pagination.per_page
     return hotels[start:finish]
 
 @router_hotels.delete("/{hotel_id}", summary="Удаление отеля по идентификатору")
