@@ -2,11 +2,10 @@ from idlelib.query import Query
 from zlib import Z_RLE
 
 from src.app.dependencies import PaginationDep
-from src.database import async_session_maker, engine
-from src.models.hotels import HotelsOrm
+from src.database import async_session_maker
+from src.repositories.hotels import HotelsRepository
 from src.schemas.hotels import Hotel, HotelPATCH
 from fastapi import APIRouter, Body
-from sqlalchemy import insert, select
 
 router_hotels = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -18,20 +17,13 @@ async def get_hotels(pagination: PaginationDep,
                      title: str | None = Query(None, description="Название отеля"),
                      ):
     per_page = pagination.per_page or 5
-    limit = per_page
-    offset = (pagination.page - 1) * pagination.per_page
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-        if location:
-            query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
-        if title:
-            query = query.filter_by(title=title)
-        query = (query
-                 .limit(limit)
-                 .offset(offset))
-        result = await session.execute(query)
-        hotels = result.scalars().all()
-        return hotels
+        return await HotelsRepository(session).get_all(
+            location=location,
+            title=title,
+            limit=per_page,
+            offset=per_page * (pagination.page - 1)
+        )
 
 @router_hotels.post("/create", summary="Добавление отеля")
 async def create_hotel(hotels_data: Hotel = Body(openapi_examples={
@@ -51,12 +43,10 @@ async def create_hotel(hotels_data: Hotel = Body(openapi_examples={
     }
 })):
     async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelsOrm).values(**hotels_data.model_dump())
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelsRepository.add(**hotels_data)
         await session.commit()
 
-    return {"status": "OK"}
+    return {"status": "OK", "data": hotel}
 
 
 @router_hotels.delete("/{hotel_id}", summary="Удаление отеля по идентификатору")
