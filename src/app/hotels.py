@@ -13,8 +13,8 @@ router_hotels = APIRouter(prefix="/hotels", tags=["Отели"])
 
 @router_hotels.get("/", summary="Получение полного списка отелей")
 async def get_hotels(pagination: PaginationDep,
-                     location: str | None = Query(None, description="Расположение"),
-                     title: str | None = Query(None, description="Название отеля"),
+                     location: str | None = Query(None),
+                     title: str | None = Query(None),
                      ):
     per_page = pagination.per_page or 5
     async with async_session_maker() as session:
@@ -43,30 +43,25 @@ async def create_hotel(hotels_data: Hotel = Body(openapi_examples={
     }
 })):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository.add(**hotels_data)
+        hotel = await HotelsRepository(session).add(hotels_data)
         await session.commit()
 
     return {"status": "OK", "data": hotel}
 
 
 @router_hotels.delete("/{hotel_id}", summary="Удаление отеля по идентификатору")
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).delete(hotel_id)
+        await session.commit()
     return {"status": "Ok"}
 
-@router_hotels.post("/", summary="Добавление нового отеля")
-def create_hotel(hotel_data: Hotel):
-    global hotels
-    hotels.append({"id": hotels[-1]["id"] + 1, "name": hotel_data.name, "rooms": hotel_data.rooms})
-    return {"status": "Ok"}
 
 @router_hotels.put("/{hotel_id}", summary="Изменение данных отеля")
-def edit_hotel(hotel_id: int, hotel_data: Hotel):
-    global hotels
-    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
-    hotel["name"] = hotel_data.name
-    hotel["rooms"] = hotel_data.rooms
+async def edit_hotel(hotel_id: int, hotel_data: Hotel):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).delete(hotel_data)
+        await session.commit()
     return {"status": "Ok"}
 
 @router_hotels.patch("/{hotel_id}", summary="Частичное изменение данных отеля")
