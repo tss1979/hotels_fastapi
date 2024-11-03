@@ -21,7 +21,7 @@ async def get_hotels(pagination: PaginationDep,
             offset=per_page * (pagination.page - 1))
 
 @router_hotels.get("/{hotel_id}", summary="Получение отеля по идентификатору")
-async def get_hotel_bi_id(hotel_id: int):
+async def get_hotel_by_id(hotel_id: int):
     async with async_session_maker() as session:
         return await HotelsRepository(session).get_one_or_none(id=hotel_id)
 
