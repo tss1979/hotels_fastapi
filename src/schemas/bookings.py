@@ -6,7 +6,7 @@ class BookingAddRequest(BaseModel):
     date_from: date
     date_to: date
 
-class BookingAdd(BaseModel):
+class BookingAdd(BookingAddRequest):
     user_id: int
     price: int
 
