@@ -46,7 +46,7 @@ async def create_hotel(db: DBDep, hotels_data: HotelAdd = Body(openapi_examples=
         }
     }
 })):
-    hotel = await db.add(hotels_data)
+    hotel = await db.hotels.add(hotels_data)
     await db.commit()
     return {"status": "OK", "data": hotel}
 

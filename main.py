@@ -2,6 +2,8 @@
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
+
+from src.app.facilities import router_facilities
 from src.app.hotels import router_hotels
 from src.app.auth import router_auth
 from src.app.rooms import router_rooms
@@ -17,6 +19,7 @@ app.include_router(router_auth)
 app.include_router(router_hotels)
 app.include_router(router_rooms)
 app.include_router(router_bookings)
+app.include_router(router_facilities)
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
