@@ -34,4 +34,5 @@ class RoomsRepository(BaseRepository):
             query = query.filter_by(hotel_id=hotel_id)
         print(query.compile(compile_kwargs={"literal_binds": True}))
         result = await self.session.execute(query)
+
         return [Room.model_validate(model, from_attributes=True) for model in result.scalars().all()]

@@ -1,6 +1,7 @@
 from datetime import date
 
 from src.app.dependencies import DBDep
+from src.schemas.facilities import RoomFacilityAdd
 from src.schemas.rooms import RoomAdd, RoomPATCH, RoomAddRequest, RoomPATCHRequest
 from fastapi import APIRouter, Body, Query
 
@@ -29,6 +30,7 @@ async def create_room(hotel_id: int, db: DBDep, room_data: RoomAddRequest = Body
             "description": "30 m2",
             "price": 15000,
             "quantity": 100,
+            "facilities_ids": [1, 2],
         }
     },
     "2": {
@@ -38,12 +40,14 @@ async def create_room(hotel_id: int, db: DBDep, room_data: RoomAddRequest = Body
             "description": "130 m2",
             "price": 150000,
             "quantity": 1,
+            "facilities_ids": [1, 2],
         }
     }
 })):
-
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     room = await db.rooms.add(_room_data)
+    rooms_facilities_data = [RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids]
+    await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
     return {"status": "OK", "data": room}
 
@@ -58,6 +62,13 @@ async def delete_hotel(hotel_id: int, room_id: int, db: DBDep):
 @router_rooms.put("/{hotel_id}/rooms/{room_id}", summary="Изменение данных номера")
 async def edit_hotel(hotel_id: int, room_id: int, room_data: RoomAddRequest, db: DBDep):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
+    facilities_id = db.rooms_facilities.get_all_filtered(room_id=room_id)
+    facilities_to_add = [item for item in room_data.facilities_ids if item not in facilities_id]
+    facilities_to_delete = [item for item in facilities_id if item not in room_data.facilities_ids]
+    rooms_facilities_data = [RoomFacilityAdd(room_id=room_id, facility_id=f_id) for f_id in facilities_to_add]
+    for id in facilities_to_delete:
+        await db.rooms_facilities.delete(id=id)
+    await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.rooms.update(_room_data, id=room_id, hotel_id=hotel_id)
     await db.commit()
     return {"status": "Ok"}
