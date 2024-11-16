@@ -19,7 +19,7 @@ async def get_rooms(
 
 @router_rooms.get("/{hotel_id}/rooms/{room_id}", summary="Получение номера по идентификатору")
 async def get_room_by_id(hotel_id: int, room_id: int, db: DBDep):
-    return await db.rooms.get_one_or_none(id=room_id, hotel_id=hotel_id)
+    return await db.rooms.get_one_or_none_with_rls(id=room_id, hotel_id=hotel_id)
 
 @router_rooms.post("/{hotel_id}/rooms/create", summary="Добавление номера")
 async def create_room(hotel_id: int, db: DBDep, room_data: RoomAddRequest = Body(openapi_examples={
