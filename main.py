@@ -19,12 +19,14 @@ from src.app.images import router_images
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
     yield
     await redis_manager.close()
+
 
 app = FastAPI(docs_url=None, lifespan=lifespan)
 
@@ -35,6 +37,7 @@ app.include_router(router_bookings)
 app.include_router(router_facilities)
 app.include_router(router_images)
 
+
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
@@ -44,7 +47,6 @@ async def custom_swagger_ui_html():
         swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
         swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
     )
-
 
 
 if __name__ == "__main__":

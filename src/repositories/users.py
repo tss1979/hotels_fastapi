@@ -1,10 +1,9 @@
 from sqlalchemy import select
-from pydantic import  EmailStr
+from pydantic import EmailStr
 
 from src.repositories.base import BaseRepository
 from src.models.users import UsersOrm
-from src.schemas.users import User, UserAdd, UserRequestAdd, UserWithHashedPassword
-
+from src.schemas.users import User, UserWithHashedPassword
 
 
 class UsersRepository(BaseRepository):
@@ -16,4 +15,3 @@ class UsersRepository(BaseRepository):
         result = await self.session.execute(query)
         model = result.scalars().one()
         return UserWithHashedPassword.model_validate(model, from_attributes=True)
-
