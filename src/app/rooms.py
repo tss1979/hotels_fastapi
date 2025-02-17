@@ -30,7 +30,7 @@ async def get_rooms(
 async def get_room_by_id(hotel_id: int, room_id: int, db: DBDep):
     room = await db.rooms.get_one_or_none_with_rls(id=room_id, hotel_id=hotel_id)
     if not room:
-        raise HTTPException(status_code=400, detail="Комната не найдена")
+        raise HTTPException(status_code=404, detail="Комната не найдена")
     else:
         return room
 

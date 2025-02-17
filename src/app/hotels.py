@@ -34,7 +34,7 @@ async def get_hotel_by_id(hotel_id: int, db: DBDep):
     try:
         return await db.hotels.get_one(id=hotel_id)
     except ObjectNotFoundException:
-        raise HTTPException(status_code=400, detail="Отель не найден")
+        raise HTTPException(status_code=404, detail="Отель не найден")
 
 
 @router_hotels.post("/create", summary="Добавление отеля")
