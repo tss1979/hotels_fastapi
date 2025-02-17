@@ -1,9 +1,12 @@
 from datetime import date
+from fastapi import HTTPException
+
+from fastapi import APIRouter, Body, Query
 
 from src.app.dependencies import DBDep
 from src.schemas.facilities import RoomFacilityAdd
 from src.schemas.rooms import RoomAdd, RoomPATCH, RoomAddRequest, RoomPATCHRequest
-from fastapi import APIRouter, Body, Query
+from src.exceptions import check_date_to_is_after_date_from, ObjectNotFoundException
 
 router_rooms = APIRouter(prefix="/hotels", tags=["Номера"])
 
@@ -15,6 +18,7 @@ async def get_rooms(
     date_from: date = Query(example="2024-08-01"),
     date_to: date = Query(example="2024-08-10"),
 ):
+    check_date_to_is_after_date_from(date_from, date_to)
     return await db.rooms.get_rooms_by_time(
         hotel_id=hotel_id, date_from=date_from, date_to=date_to
     )
@@ -24,8 +28,11 @@ async def get_rooms(
     "/{hotel_id}/rooms/{room_id}", summary="Получение номера по идентификатору"
 )
 async def get_room_by_id(hotel_id: int, room_id: int, db: DBDep):
-    return await db.rooms.get_one_or_none_with_rls(id=room_id, hotel_id=hotel_id)
-
+    room = await db.rooms.get_one_or_none_with_rls(id=room_id, hotel_id=hotel_id)
+    if not room:
+        raise HTTPException(status_code=400, detail="Комната не найдена")
+    else:
+        return room
 
 @router_rooms.post("/{hotel_id}/rooms/create", summary="Добавление номера")
 async def create_room(

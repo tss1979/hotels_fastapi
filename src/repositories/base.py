@@ -1,8 +1,9 @@
-import sqlalchemy.exc
+from sqlalchemy.exc import IntegrityError, NoResultFound
+from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
 
-from src.exceptions import ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException
 
 
 class BaseRepository:
@@ -37,16 +38,24 @@ class BaseRepository:
         result = await self.session.execute(query)
         try:
             model = result.scalar_one()
-        except sqlalchemy.exc.NoResultFound:
+        except NoResultFound:
             raise ObjectNotFoundException
         return self.schema.model_validate(model, from_attributes=True)
 
 
     async def add(self, data: BaseModel):
-        add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        result = await self.session.execute(add_stmt)
-        model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        try:
+            add_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+            result = await self.session.execute(add_stmt)
+            model = result.scalars().one()
+            return self.schema.model_validate(model, from_attributes=True)
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExistsException from ex
+            else:
+                raise ex
+
+
 
     async def add_bulk(self, data: list[BaseModel]):
         add_stmt = insert(self.model).values([item.model_dump() for item in data])

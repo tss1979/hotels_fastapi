@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response
 from src.app.dependencies import UserIdDep, DBDep
-
+from src.exceptions import ObjectAlreadyExistsException
 
 from src.schemas.users import UserRequestAdd, UserAdd
 from src.services.auth import AuthService
@@ -15,8 +15,8 @@ async def register_user(data: UserRequestAdd, db: DBDep):
         new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
         await db.users.add(new_user_data)
         await db.commit()
-    except:
-        raise HTTPException(status_code=400)
+    except ObjectAlreadyExistsException:
+        raise HTTPException(status_code=409, detail="Пользователь с такой почтой уже существует")
     return {"status": "OK"}
 
 
