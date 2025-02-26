@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import HTTPException
-from src.exceptions import check_date_to_is_after_date_from, ObjectNotFoundException
+from src.exceptions import check_date_to_is_after_date_from, ObjectNotFoundException, HotelNotFoundHTTPException
 from src.app.dependencies import PaginationDep, DBDep
 from src.schemas.hotels import HotelPATCH, HotelAdd
 from fastapi import APIRouter, Body, Query
@@ -34,7 +34,7 @@ async def get_hotel_by_id(hotel_id: int, db: DBDep):
     try:
         return await db.hotels.get_one(id=hotel_id)
     except ObjectNotFoundException:
-        raise HTTPException(status_code=404, detail="Отель не найден")
+        raise HotelNotFoundHTTPException
 
 
 @router_hotels.post("/create", summary="Добавление отеля")

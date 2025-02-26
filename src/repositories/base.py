@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy import select, insert, delete, update
@@ -50,9 +51,11 @@ class BaseRepository:
             model = result.scalars().one()
             return self.schema.model_validate(model, from_attributes=True)
         except IntegrityError as ex:
+            logging.error(f"Не удалось добавить данные в БД, входные данные={data}")
             if isinstance(ex.orig.__cause__, UniqueViolationError):
                 raise ObjectAlreadyExistsException from ex
             else:
+                logging.error(f"Незнакомая ошибка")
                 raise ex
 
 
