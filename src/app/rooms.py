@@ -4,9 +4,8 @@ from fastapi import HTTPException
 from fastapi import APIRouter, Body, Query
 
 from src.app.dependencies import DBDep
-from src.schemas.facilities import RoomFacilityAdd
-from src.schemas.rooms import RoomAdd, RoomPATCH, RoomAddRequest, RoomPATCHRequest
-from src.exceptions import check_date_to_is_after_date_from, ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, RoomNotFoundHTTPException, HotelNotFoundHTTPException
+from src.schemas.rooms import  RoomAddRequest, RoomPATCHRequest
 from src.services.rooms import RoomService
 
 router_rooms = APIRouter(prefix="/hotels", tags=["Номера"])
@@ -61,7 +60,10 @@ async def create_room(
         }
     ),
 ):
-    room = await RoomService(db).create_room(hotel_id, room_data)
+    try:
+        room = await RoomService(db).create_room(hotel_id, room_data)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
     return {"status": "OK", "data": room}
 
 
@@ -69,13 +71,19 @@ async def create_room(
     "/{hotel_id}/rooms/{room_id}", summary="Удаление номера по идентификатору"
 )
 async def delete_room(hotel_id: int, room_id: int, db: DBDep):
-    await RoomService(db).delete_room(hotel_id, room_id)
+    try:
+        await RoomService(db).delete_room(hotel_id, room_id)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
     return {"status": "Ok"}
 
 
 @router_rooms.put("/{hotel_id}/rooms/{room_id}", summary="Изменение данных номера")
 async def edit_room(hotel_id: int, room_id: int, room_data: RoomAddRequest, db: DBDep):
-    await RoomService(db).edit_room(hotel_id, room_id, room_data)
+    try:
+        await RoomService(db).edit_room(hotel_id, room_id, room_data)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
     return {"status": "Ok"}
 
 
@@ -85,5 +93,8 @@ async def edit_room(hotel_id: int, room_id: int, room_data: RoomAddRequest, db: 
 async def partial_edit_hotel(
     hotel_id: int, room_id: int, room_data: RoomPATCHRequest, db: DBDep
 ):
-    await RoomService(db).partial_edit_room(hotel_id, room_id, room_data)
+    try:
+        await RoomService(db).partial_edit_room(hotel_id, room_id, room_data)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
     return {"status": "Ok"}

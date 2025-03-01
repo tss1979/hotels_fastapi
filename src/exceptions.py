@@ -10,6 +10,12 @@ class HotelAppException(Exception):
 class ObjectNotFoundException(HotelAppException):
     detail = "Сущность не найдена"
 
+class RoomNotFoundException(ObjectNotFoundException):
+    detail = "Номер не найдена"
+
+class HotelNotFoundException(ObjectNotFoundException):
+    detail = "Отель не найдена"
+
 class ObjectAlreadyExistsException(HotelAppException):
     detail = "Объект уже существует"
 

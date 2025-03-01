@@ -58,17 +58,26 @@ async def create_hotel(
 
 @router_hotels.delete("/{hotel_id}", summary="Удаление отеля по идентификатору")
 async def delete_hotel(hotel_id: int, db: DBDep):
-    await HotelService(db).delete_hotel(hotel_id)
+    try:
+        await HotelService(db).delete_hotel(hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
     return {"status": "Ok"}
 
 
 @router_hotels.put("/{hotel_id}", summary="Изменение данных отеля")
 async def edit_hotel(hotel_id: int, hotel_data: HotelAdd, db: DBDep):
-    await HotelService(db).edit_hotel(hotel_id, hotel_data)
+    try:
+        await HotelService(db).edit_hotel(hotel_id, hotel_data)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
     return {"status": "Ok"}
 
 
 @router_hotels.patch("/{hotel_id}", summary="Частичное изменение данных отеля")
 async def partial_edit_hotel(hotel_id: int, hotel_data: HotelPATCH, db: DBDep):
-    await HotelService(db).partial_hotel_update(hotel_id, hotel_data)
+    try:
+        await HotelService(db).partial_hotel_update(hotel_id, hotel_data)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
     return {"status": "Ok"}

@@ -1,8 +1,8 @@
 from datetime import date
 
 from src.app.dependencies import PaginationDep
-from src.exceptions import check_date_to_is_after_date_from
-from src.schemas.hotels import HotelAdd, HotelPATCH
+from src.exceptions import check_date_to_is_after_date_from, HotelNotFoundException, ObjectNotFoundException
+from src.schemas.hotels import HotelAdd, HotelPATCH, Hotel
 from src.services.base import BaseService
 
 
@@ -44,3 +44,9 @@ class HotelService(BaseService):
     async def partial_hotel_update(self, hotel_id: int, hotel_data: HotelPATCH):
         await self.db.hotels.update(hotel_data, id=hotel_id, exclude_unset=True)
         await self.db.commit()
+
+    async def get_hotel_with_check(self, hotel_id: int) -> Hotel:
+        try:
+            return await self.db.hotels.get_one(id=hotel_id)
+        except ObjectNotFoundException:
+            raise HotelNotFoundException
