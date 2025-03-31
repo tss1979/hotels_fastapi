@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
 
@@ -17,7 +18,7 @@ from src.app.auth import router_auth
 from src.app.rooms import router_rooms
 from src.app.bookings import router_bookings
 from src.app.images import router_images
-
+from src.config import settings
 
 sys.path.append(str(Path(__file__).parent.parent))
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,9 @@ async def lifespan(app: FastAPI):
     logging.info("FastAPI cache initialized")
     yield
     await redis_manager.close()
+
+# if settings.MODE == "TEST":
+#     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
 
 app = FastAPI(docs_url=None, lifespan=lifespan)

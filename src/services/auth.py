@@ -7,7 +7,7 @@ from src.config import settings
 from src.services.base import BaseService
 
 
-class AuthService(BaseService):
+class AuthService():
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def verify_password(self, plain_password, hashed_password):

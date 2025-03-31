@@ -16,8 +16,8 @@ async def get_hotels(
     db: DBDep,
     location: str | None = Query(None, description="Расположение отеля"),
     title: str | None = Query(None, description="Название отеля"),
-    date_from: date = Query(example="2024-08-12"),
-    date_to: date = Query(example="2024-08-16"),
+    date_from: date = Query(examples="2024-08-12"),
+    date_to: date = Query(examples="2024-08-16"),
 ):
     return await HotelService(db).get_hotels(pagination, location, title, date_from, date_to)
 
